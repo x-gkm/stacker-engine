@@ -180,7 +180,7 @@ impl Piece {
 impl ActivePiece {
     fn spawn(kind: Piece) -> ActivePiece {
         let x = PILE_WIDTH as i32 / 2 - 1;
-        let y = GRID_HEIGHT as i32 + 2;
+        let y = GRID_HEIGHT + 2;
         let orientation = Orientation::N;
 
         let mut result = ActivePiece {
@@ -213,7 +213,7 @@ fn check_collision(
             return true;
         }
 
-        if let Some(_) = pile[y as usize][x as usize] {
+        if pile[y as usize][x as usize].is_some() {
             return true;
         }
     }
