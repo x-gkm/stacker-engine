@@ -28,10 +28,80 @@ enum Orientation {
     W,
 }
 
+#[derive(Debug, Default, Clone)]
+struct PlayerActions {
+    flip: bool,
+    hold: bool,
+    rotate_left: bool,
+    rotate_right: bool,
+    harddrop: bool,
+    begin_move_right: bool,
+    end_move_right: bool,
+    begin_move_left: bool,
+    end_move_left: bool,
+    begin_softdrop: bool,
+    end_softdrop: bool,
+}
+
+impl PlayerActions {
+    fn clear(&mut self) {
+        *self = Default::default();
+    }
+
+    fn take_input(&mut self) {
+        self.clear();
+
+        if is_key_pressed(KeyCode::A) {
+            self.hold = true;
+        }
+
+        if is_key_pressed(KeyCode::S) {
+            self.flip = true;
+        }
+
+        if is_key_pressed(KeyCode::D) {
+            self.rotate_left = true;
+        }
+
+        if is_key_pressed(KeyCode::F) {
+            self.rotate_right = true;
+        }
+
+        if is_key_pressed(KeyCode::Space) {
+            self.harddrop = true;
+        }
+
+        if is_key_pressed(KeyCode::J) {
+            self.begin_move_left = true;
+        }
+
+        if is_key_released(KeyCode::J) {
+            self.end_move_left = true;
+        }
+
+        if is_key_pressed(KeyCode::K) {
+            self.begin_softdrop = true;
+        }
+
+        if is_key_released(KeyCode::K) {
+            self.end_softdrop = true;
+        }
+
+        if is_key_pressed(KeyCode::L) {
+            self.begin_move_right = true;
+        }
+
+        if is_key_released(KeyCode::L) {
+            self.end_move_right = true;
+        }
+    }
+}
+
 struct Engine {
     pile: [[Option<Piece>; PILE_WIDTH]; PILE_HEIGHT],
     active_piece: ActivePiece,
     residue_time: u128,
+    frame_actions: PlayerActions,
     gravity_time: i32,
 }
 
@@ -42,6 +112,7 @@ impl Engine {
             active_piece: ActivePiece::spawn(Piece::T),
             residue_time: 0,
             gravity_time: 0,
+            frame_actions: Default::default(),
         }
     }
 
@@ -76,6 +147,8 @@ async fn main() {
     loop {
         let time = Instant::now();
         let delta = time - prev_time;
+
+        engine.frame_actions.take_input();
 
         engine.update(delta);
 
