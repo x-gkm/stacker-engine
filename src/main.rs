@@ -268,9 +268,26 @@ impl Engine {
             self.active_piece = ActivePiece::spawn(Piece::T);
         }
 
+        if fa.begin_softdrop {
+            fa.begin_softdrop = false;
+            self.softdrop = true;
+            self.gravity_time = 0;
+            let mut branched_piece = self.active_piece.clone();
+            branched_piece.y -= 1;
+            branched_piece.update_blocks();
+            if !check_collision(&self.pile, &branched_piece.blocks) {
+                self.active_piece = branched_piece;
+            }
+        }
+
+        if fa.end_softdrop {
+            fa.end_softdrop = false;
+            self.softdrop = false;
+        }
+
         self.gravity_time += 1;
-        if self.gravity_time >= ENGINE_FPS {
-            self.gravity_time -= ENGINE_FPS;
+        if self.gravity_time >= if self.softdrop { 5 } else { ENGINE_FPS } {
+            self.gravity_time = 0;
             let mut branched_piece = self.active_piece.clone();
             branched_piece.y -= 1;
             branched_piece.update_blocks();

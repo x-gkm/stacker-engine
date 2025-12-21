@@ -2,6 +2,7 @@
 
 Things left to implement:
 - [x] Harddrop
+- [x] Softdrop
 - [ ] Ghost piece
 - [ ] Spawn delay
 - [ ] Line clears
