@@ -119,6 +119,9 @@ struct Engine {
     frame_actions: PlayerActions,
     gravity_time: i32,
     das: Option<DasDirection>,
+    move_left: bool,
+    move_right: bool,
+    softdrop: bool,
     das_time: i32,
 }
 
@@ -131,6 +134,9 @@ impl Engine {
             gravity_time: 0,
             frame_actions: Default::default(),
             das: None,
+            move_left: false,
+            move_right: false,
+            softdrop: false,
             das_time: 0,
         }
     }
@@ -168,8 +174,8 @@ impl Engine {
 
         if fa.end_move_left {
             fa.end_move_left = false;
-            // FIXME(gkm): This should be coming from somewhere else.
-            if is_key_down(KeyCode::L) {
+            self.move_left = false;
+            if self.move_right {
                 self.das = Some(DasDirection::Right);
             } else {
                 self.das = None;
@@ -179,8 +185,8 @@ impl Engine {
 
         if fa.end_move_right {
             fa.end_move_right = false;
-            // FIXME(gkm): This should be coming from somewhere else.
-            if is_key_down(KeyCode::J) {
+            self.move_right = false;
+            if self.move_left {
                 self.das = Some(DasDirection::Left);
             } else {
                 self.das = None;
@@ -220,6 +226,7 @@ impl Engine {
 
         if fa.begin_move_left {
             fa.begin_move_left = false;
+            self.move_left = true;
             let mut branched_piece = self.active_piece.clone();
             branched_piece.x -= 1;
             branched_piece.update_blocks();
@@ -232,6 +239,7 @@ impl Engine {
 
         if fa.begin_move_right {
             fa.begin_move_right = false;
+            self.move_right = true;
             let mut branched_piece = self.active_piece.clone();
             branched_piece.x += 1;
             branched_piece.update_blocks();
