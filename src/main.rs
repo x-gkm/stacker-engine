@@ -118,12 +118,16 @@ enum GameEvent {
     Das,
 }
 
+struct DasState {
+    direction: Option<Direction>,
+    move_left: bool,
+    move_right: bool,
+}
+
 struct Engine {
     pile: [[Option<Piece>; PILE_WIDTH]; PILE_HEIGHT],
     active_piece: ActivePiece,
-    das: Option<Direction>,
-    move_left: bool,
-    move_right: bool,
+    das: DasState,
     timer: Timer<GameEvent>,
 }
 
@@ -136,9 +140,11 @@ impl Engine {
         Engine {
             pile: [[None; PILE_WIDTH]; PILE_HEIGHT],
             active_piece: ActivePiece::spawn(Piece::T),
-            das: None,
-            move_left: false,
-            move_right: false,
+            das: DasState {
+                direction: None,
+                move_left: false,
+                move_right: false,
+            },
             timer,
         }
     }
@@ -189,7 +195,7 @@ impl Engine {
                 self.active_piece = ActivePiece::spawn(Piece::T);
             }
             BeginMove(Left) => {
-                self.move_left = true;
+                self.das.move_left = true;
                 let mut branched_piece = self.active_piece.clone();
                 branched_piece.x -= 1;
                 branched_piece.update_blocks();
@@ -198,10 +204,10 @@ impl Engine {
                 }
                 self.timer.remove(GameEvent::Das);
                 self.timer.add(ENGINE_DAS as u32, GameEvent::Das);
-                self.das = Some(Direction::Left);
+                self.das.direction = Some(Direction::Left);
             }
             BeginMove(Right) => {
-                self.move_right = true;
+                self.das.move_right = true;
                 let mut branched_piece = self.active_piece.clone();
                 branched_piece.x += 1;
                 branched_piece.update_blocks();
@@ -210,26 +216,26 @@ impl Engine {
                 }
                 self.timer.remove(GameEvent::Das);
                 self.timer.add(ENGINE_DAS as u32, GameEvent::Das);
-                self.das = Some(Direction::Right);
+                self.das.direction = Some(Direction::Right);
             }
             EndMove(Left) => {
-                self.move_left = false;
+                self.das.move_left = false;
                 self.timer.remove(GameEvent::Das);
-                if self.move_right {
-                    self.das = Some(Direction::Right);
+                if self.das.move_right {
+                    self.das.direction = Some(Direction::Right);
                     self.timer.add(ENGINE_DAS as u32, GameEvent::Das);
                 } else {
-                    self.das = None;
+                    self.das.direction = None;
                 }
             }
             EndMove(Right) => {
-                self.move_right = false;
+                self.das.move_right = false;
                 self.timer.remove(GameEvent::Das);
-                if self.move_left {
-                    self.das = Some(Direction::Left);
+                if self.das.move_left {
+                    self.das.direction = Some(Direction::Left);
                     self.timer.add(ENGINE_DAS as u32, GameEvent::Das);
                 } else {
-                    self.das = None;
+                    self.das.direction = None;
                 }
             }
             BeginSoftdrop => {
@@ -270,7 +276,7 @@ impl Engine {
                 }
                 GameEvent::Das => {
                     let mut branched_piece = self.active_piece.clone();
-                    branched_piece.x += match self.das {
+                    branched_piece.x += match self.das.direction {
                         Some(Direction::Left) => -1,
                         Some(Direction::Right) => 1,
                         None => unreachable!(),
