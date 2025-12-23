@@ -105,7 +105,7 @@ fn take_input() -> Vec<Input> {
     result
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum Direction {
     Left,
     Right,
@@ -115,6 +115,9 @@ enum Direction {
 enum GameEvent {
     Gravity,
     Softdrop,
+    Rotate(i32),
+    Harddrop,
+    Move(Direction),
     Das,
 }
 
@@ -154,66 +157,28 @@ impl Engine {
         use Input::*;
         match input {
             Flip => {
-                let mut branched_piece = self.active_piece.clone();
-                branched_piece.orientation.rotate_cw(2);
-                branched_piece.update_blocks();
-                if !check_collision(&self.pile, &branched_piece.blocks) {
-                    self.active_piece = branched_piece;
-                }
+                self.timer.add(0, GameEvent::Rotate(2));
             }
             Hold => {}
             Rotate(Left) => {
-                let mut branched_piece = self.active_piece.clone();
-                branched_piece.orientation.rotate_cw(3);
-                branched_piece.update_blocks();
-                if !check_collision(&self.pile, &branched_piece.blocks) {
-                    self.active_piece = branched_piece;
-                }
+                self.timer.add(0, GameEvent::Rotate(3));
             }
             Rotate(Right) => {
-                let mut branched_piece = self.active_piece.clone();
-                branched_piece.orientation.rotate_cw(1);
-                branched_piece.update_blocks();
-                if !check_collision(&self.pile, &branched_piece.blocks) {
-                    self.active_piece = branched_piece;
-                }
+                self.timer.add(0, GameEvent::Rotate(1));
             }
             Harddrop => {
-                loop {
-                    let mut branched_piece = self.active_piece.clone();
-                    branched_piece.y -= 1;
-                    branched_piece.update_blocks();
-                    if !check_collision(&self.pile, &branched_piece.blocks) {
-                        self.active_piece = branched_piece;
-                    } else {
-                        break;
-                    }
-                }
-                for (x, y) in self.active_piece.blocks {
-                    self.pile[y as usize][x as usize] = Some(self.active_piece.kind)
-                }
-                self.active_piece = ActivePiece::spawn(Piece::T);
+                self.timer.add(0, GameEvent::Harddrop);
             }
             BeginMove(Left) => {
                 self.das.move_left = true;
-                let mut branched_piece = self.active_piece.clone();
-                branched_piece.x -= 1;
-                branched_piece.update_blocks();
-                if !check_collision(&self.pile, &branched_piece.blocks) {
-                    self.active_piece = branched_piece;
-                }
+                self.timer.add(0, GameEvent::Move(Direction::Left));
                 self.timer.remove(GameEvent::Das);
                 self.timer.add(ENGINE_DAS as u32, GameEvent::Das);
                 self.das.direction = Some(Direction::Left);
             }
             BeginMove(Right) => {
                 self.das.move_right = true;
-                let mut branched_piece = self.active_piece.clone();
-                branched_piece.x += 1;
-                branched_piece.update_blocks();
-                if !check_collision(&self.pile, &branched_piece.blocks) {
-                    self.active_piece = branched_piece;
-                }
+                self.timer.add(0, GameEvent::Move(Direction::Right));
                 self.timer.remove(GameEvent::Das);
                 self.timer.add(ENGINE_DAS as u32, GameEvent::Das);
                 self.das.direction = Some(Direction::Right);
@@ -275,18 +240,43 @@ impl Engine {
                     self.timer.add(5, GameEvent::Softdrop);
                 }
                 GameEvent::Das => {
+                    self.timer.add(0, GameEvent::Move(self.das.direction.unwrap()));
+                    self.timer.add(ENGINE_ARR as u32, GameEvent::Das);
+                }
+                GameEvent::Rotate(n) => {
                     let mut branched_piece = self.active_piece.clone();
-                    branched_piece.x += match self.das.direction {
-                        Some(Direction::Left) => -1,
-                        Some(Direction::Right) => 1,
-                        None => unreachable!(),
+                    branched_piece.orientation.rotate_cw(n);
+                    branched_piece.update_blocks();
+                    if !check_collision(&self.pile, &branched_piece.blocks) {
+                        self.active_piece = branched_piece;
+                    }
+                }
+                GameEvent::Harddrop => {
+                    loop {
+                        let mut branched_piece = self.active_piece.clone();
+                        branched_piece.y -= 1;
+                        branched_piece.update_blocks();
+                        if !check_collision(&self.pile, &branched_piece.blocks) {
+                            self.active_piece = branched_piece;
+                        } else {
+                            break;
+                        }
+                    }
+                    for (x, y) in self.active_piece.blocks {
+                        self.pile[y as usize][x as usize] = Some(self.active_piece.kind)
+                    }
+                    self.active_piece = ActivePiece::spawn(Piece::T);
+                }
+                GameEvent::Move(direction) => {
+                    let mut branched_piece = self.active_piece.clone();
+                    branched_piece.x += match direction {
+                        Direction::Right => 1,
+                        Direction::Left => -1,
                     };
                     branched_piece.update_blocks();
                     if !check_collision(&self.pile, &branched_piece.blocks) {
                         self.active_piece = branched_piece;
                     }
-
-                    self.timer.add(ENGINE_ARR as u32, GameEvent::Das);
                 }
             }
         }
