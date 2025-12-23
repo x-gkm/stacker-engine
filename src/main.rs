@@ -129,7 +129,7 @@ struct DasState {
 
 struct Engine {
     pile: [[Option<Piece>; PILE_WIDTH]; PILE_HEIGHT],
-    active_piece: ActivePiece,
+    active_piece: Option<ActivePiece>,
     das: DasState,
     timer: Timer<GameEvent>,
 }
@@ -141,8 +141,8 @@ impl Engine {
         timer.add(1000, GameEvent::Gravity);
 
         let pile = [[None; PILE_WIDTH]; PILE_HEIGHT];
-        let mut active_piece = ActivePiece::spawn(Piece::T);
-        active_piece.update_ghost(&pile);
+        let mut active_piece = Some(ActivePiece::spawn(Piece::T));
+        active_piece.as_mut().unwrap().update_ghost(&pile);
 
         Engine {
             pile,
@@ -224,21 +224,21 @@ impl Engine {
         while let Some(event) = self.timer.poll() {
             match event {
                 GameEvent::Gravity => {
-                    let mut branched_piece = self.active_piece.clone();
+                    let mut branched_piece = self.active_piece.clone().unwrap();
                     branched_piece.y -= 1;
                     branched_piece.update_blocks();
                     if !check_collision(&self.pile, &branched_piece.blocks) {
-                        self.active_piece = branched_piece;
+                        self.active_piece = Some(branched_piece);
                     }
 
                     self.timer.add(1000, GameEvent::Gravity);
                 }
                 GameEvent::Softdrop => {
-                    let mut branched_piece = self.active_piece.clone();
+                    let mut branched_piece = self.active_piece.clone().unwrap();
                     branched_piece.y -= 1;
                     branched_piece.update_blocks();
                     if !check_collision(&self.pile, &branched_piece.blocks) {
-                        self.active_piece = branched_piece;
+                        self.active_piece = Some(branched_piece);
                     }
 
                     self.timer.add(5, GameEvent::Softdrop);
@@ -248,32 +248,32 @@ impl Engine {
                     self.timer.add(ENGINE_ARR as u32, GameEvent::Das);
                 }
                 GameEvent::Rotate(n) => {
-                    let mut branched_piece = self.active_piece.clone();
+                    let mut branched_piece = self.active_piece.clone().unwrap();
                     branched_piece.orientation.rotate_cw(n);
                     branched_piece.update_blocks();
                     if !check_collision(&self.pile, &branched_piece.blocks) {
-                        self.active_piece = branched_piece;
+                        self.active_piece = Some(branched_piece);
                     }
-                    self.active_piece.update_ghost(&self.pile);
+                    self.active_piece.as_mut().unwrap().update_ghost(&self.pile);
                 }
                 GameEvent::Harddrop => {
-                    for (x, y) in self.active_piece.ghost_blocks {
-                        self.pile[y as usize][x as usize] = Some(self.active_piece.kind)
+                    for (x, y) in self.active_piece.as_ref().unwrap().ghost_blocks {
+                        self.pile[y as usize][x as usize] = Some(self.active_piece.as_ref().unwrap().kind)
                     }
-                    self.active_piece = ActivePiece::spawn(Piece::T);
-                    self.active_piece.update_ghost(&self.pile);
+                    self.active_piece = Some(ActivePiece::spawn(Piece::T));
+                    self.active_piece.as_mut().unwrap().update_ghost(&self.pile);
                 }
                 GameEvent::Move(direction) => {
-                    let mut branched_piece = self.active_piece.clone();
+                    let mut branched_piece = self.active_piece.clone().unwrap();
                     branched_piece.x += match direction {
                         Direction::Right => 1,
                         Direction::Left => -1,
                     };
                     branched_piece.update_blocks();
                     if !check_collision(&self.pile, &branched_piece.blocks) {
-                        self.active_piece = branched_piece;
+                        self.active_piece = Some(branched_piece);
                     }
-                    self.active_piece.update_ghost(&self.pile);
+                    self.active_piece.as_mut().unwrap().update_ghost(&self.pile);
                 }
             }
         }
@@ -313,7 +313,7 @@ async fn main() {
             }
         }
 
-        for (x, y) in engine.active_piece.ghost_blocks {
+        for (x, y) in engine.active_piece.as_ref().unwrap().ghost_blocks {
             let x = offset_x + x as f32 * BLOCK_SIZE;
             let y = offset_y + (GRID_HEIGHT - y - 1) as f32 * BLOCK_SIZE;
 
@@ -326,7 +326,7 @@ async fn main() {
             );
         }
 
-        for (x, y) in engine.active_piece.blocks {
+        for (x, y) in engine.active_piece.as_ref().unwrap().blocks {
             let x = offset_x + x as f32 * BLOCK_SIZE;
             let y = offset_y + (GRID_HEIGHT - y - 1) as f32 * BLOCK_SIZE;
 
@@ -335,7 +335,7 @@ async fn main() {
                 y,
                 BLOCK_SIZE,
                 BLOCK_SIZE,
-                engine.active_piece.kind.color(),
+                engine.active_piece.as_ref().unwrap().kind.color(),
             );
         }
 
