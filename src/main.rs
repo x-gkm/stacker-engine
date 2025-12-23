@@ -9,6 +9,8 @@ const GRID_HEIGHT: i32 = 20;
 const BLOCK_SIZE: f32 = 25.;
 const ENGINE_DAS: i32 = 100;
 const ENGINE_ARR: i32 = 15;
+const ENGINE_ARE: u32 = 100;
+const CLEAR_DELAY: u32 = 100;
 
 #[derive(Debug, Copy, Clone)]
 enum Piece {
@@ -280,12 +282,14 @@ impl Engine {
                     }
                     let line_clear = any_lines_to_clear(&self.pile);
 
-                    if line_clear {
-                        self.timer.add(100, GameEvent::ClearLines);
-                    }
                     self.timer.remove(GameEvent::Gravity);
-                    self.timer.add(10 + if line_clear { 90 } else { 0 }, GameEvent::Spawn);
                     self.active_piece = None;
+                    if line_clear {
+                        self.timer.add(CLEAR_DELAY, GameEvent::ClearLines);
+                        self.timer.add(CLEAR_DELAY, GameEvent::Spawn);
+                    } else {
+                        self.timer.add(ENGINE_ARE, GameEvent::Spawn);
+                    }
                 }
                 GameEvent::Move(direction) => {
                     let Some(ref mut active_piece) = self.active_piece else {
