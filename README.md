@@ -7,7 +7,7 @@ Things left to implement:
 - [x] Spawn delay
 - [x] Line clears
 - [x] Line clear delay
-- [ ] Piece generation
+- [x] Piece generation
 - [ ] Top out
 - [ ] Block out
 - [ ] Hold

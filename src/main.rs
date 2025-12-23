@@ -2,6 +2,7 @@ use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
 use macroquad::prelude::*;
+use macroquad::rand::ChooseRandom;
 
 const PILE_HEIGHT: usize = 40;
 const PILE_WIDTH: usize = 10;
@@ -131,10 +132,40 @@ struct DasState {
     move_right: bool,
 }
 
+struct NextQueue {
+    pieces: VecDeque<Piece>,
+}
+
+impl NextQueue {
+    fn new() -> NextQueue {
+        let mut result = NextQueue {
+            pieces: VecDeque::new(),
+        };
+
+        result.add_bag();
+
+        result
+    }
+    fn pull(&mut self) -> Piece {
+        let result = self.pieces.pop_front().unwrap();
+        if self.pieces.len() < 5 {
+            self.add_bag();
+        }
+        result
+    }
+    fn add_bag(&mut self) {
+        use Piece::*;
+        let mut bag = [I, O, T, L, Z, J, S];
+        bag.shuffle();
+        self.pieces.extend(bag);
+    }
+}
+
 struct Engine {
     pile: [[Option<Piece>; PILE_WIDTH]; PILE_HEIGHT],
     active_piece: Option<ActivePiece>,
     das: DasState,
+    next_queue: NextQueue,
     timer: Timer<GameEvent>,
 }
 
@@ -154,6 +185,7 @@ impl Engine {
                 move_left: false,
                 move_right: false,
             },
+            next_queue: NextQueue::new(),
             timer,
         }
     }
@@ -227,7 +259,7 @@ impl Engine {
             match event {
                 GameEvent::Spawn => {
                     self.timer.add(1000, GameEvent::Gravity);
-                    self.active_piece = Some(ActivePiece::spawn(Piece::T));
+                    self.active_piece = Some(ActivePiece::spawn(self.next_queue.pull()));
                     self.active_piece.as_mut().unwrap().update_ghost(&self.pile);
                 }
                 GameEvent::Gravity => {
