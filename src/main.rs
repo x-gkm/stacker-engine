@@ -11,6 +11,7 @@ const BLOCK_SIZE: f32 = 25.;
 const ENGINE_DAS: i32 = 100;
 const ENGINE_ARR: i32 = 15;
 const ENGINE_ARE: u32 = 100;
+const ENGINE_GRAVITY: u32 = 1000;
 const CLEAR_DELAY: u32 = 100;
 
 #[derive(Debug, Copy, Clone)]
@@ -247,7 +248,7 @@ impl Engine {
             }
             EndSoftdrop => {
                 self.timer.remove(GameEvent::Softdrop);
-                self.timer.add(1000, GameEvent::Gravity);
+                self.timer.add(ENGINE_GRAVITY, GameEvent::Gravity);
             }
         }
     }
@@ -258,7 +259,7 @@ impl Engine {
         while let Some(event) = self.timer.poll() {
             match event {
                 GameEvent::Spawn => {
-                    self.timer.add(1000, GameEvent::Gravity);
+                    self.timer.add(ENGINE_GRAVITY, GameEvent::Gravity);
                     self.active_piece = Some(ActivePiece::spawn(self.next_queue.pull()));
                     self.active_piece.as_mut().unwrap().update_ghost(&self.pile);
                 }
@@ -270,7 +271,7 @@ impl Engine {
                         self.active_piece = Some(branched_piece);
                     }
 
-                    self.timer.add(1000, GameEvent::Gravity);
+                    self.timer.add(ENGINE_GRAVITY, GameEvent::Gravity);
                 }
                 GameEvent::Softdrop => {
                     let Some(ref active_piece) = self.active_piece else {
