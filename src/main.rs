@@ -433,6 +433,21 @@ async fn main() {
             }
         }
 
+        for (index, piece) in engine.next_queue.pieces.iter().enumerate().take(5) {
+            for (x, y) in piece.blocks(Orientation::N) {
+                let x = offset_x + (x + 12) as f32 * BLOCK_SIZE;
+                let y = offset_y + (GRID_HEIGHT - y - (4 - index) as i32 * 3 - 7) as f32 * BLOCK_SIZE;
+
+                draw_rectangle(
+                    x,
+                    y,
+                    BLOCK_SIZE,
+                    BLOCK_SIZE,
+                    piece.color(),
+                );
+            }
+        }
+
         if let Some(ref active_piece) = engine.active_piece {
             for (x, y) in active_piece.ghost_blocks {
                 let x = offset_x + x as f32 * BLOCK_SIZE;
