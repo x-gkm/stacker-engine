@@ -10,7 +10,13 @@ Things left to implement:
 - [x] Piece generation
 - [x] Das
 - [x] Kicks
+- [ ] Input buffering
 - [ ] Hold
 - [ ] Next queue
+- [ ] 0 ARR support
+- [ ] Forced lock
 - [ ] Block out
 - [ ] Top out
+- [ ] Back to back
+- [ ] Combos
+- [ ] T-spins
