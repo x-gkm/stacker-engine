@@ -74,10 +74,8 @@ impl PieceKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Cell {
-    #[default]
-    Empty,
     PieceKind(PieceKind),
     Garbage,
 }
@@ -329,7 +327,7 @@ impl Engine {
         }
 
         for (x, y) in ghost_piece.blocks {
-            self.pile.0[y as usize][x as usize] = Cell::PieceKind(ghost_piece.kind)
+            self.pile.0[y as usize][x as usize] = Some(Cell::PieceKind(ghost_piece.kind))
         }
         let lines_to_clear = self.pile.lines_to_clear();
 
@@ -681,7 +679,7 @@ impl Engine {
         self.next_queue.pieces.iter().take(5).copied()
     }
 
-    pub fn pile(&self) -> &[[Cell; PILE_WIDTH]; PILE_HEIGHT] {
+    pub fn pile(&self) -> &[[Option<Cell>; PILE_WIDTH]; PILE_HEIGHT] {
         &self.pile.0
     }
 
@@ -711,15 +709,15 @@ impl Engine {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-struct Pile(#[serde(with = "serde_big_array::BigArray")] [[Cell; PILE_WIDTH]; PILE_HEIGHT]);
+struct Pile(#[serde(with = "serde_big_array::BigArray")] [[Option<Cell>; PILE_WIDTH]; PILE_HEIGHT]);
 
 impl Pile {
     fn new() -> Pile {
-        Pile([[Cell::Empty; PILE_WIDTH]; PILE_HEIGHT])
+        Pile([[None; PILE_WIDTH]; PILE_HEIGHT])
     }
 
     fn is_row_full(&self, row: usize) -> bool {
-        self.0[row].iter().all(|&cell| cell != Cell::Empty)
+        self.0[row].iter().all(|&cell| cell != None)
     }
 
     fn lines_to_clear(&self) -> i32 {
@@ -741,7 +739,7 @@ impl Pile {
             }
 
             for cell in 0..PILE_WIDTH {
-                self.0[PILE_HEIGHT - 1][cell] = Cell::Empty;
+                self.0[PILE_HEIGHT - 1][cell] = None;
             }
         }
     }
@@ -751,7 +749,7 @@ impl Pile {
     }
 
     fn has_block(&self, x: i32, y: i32) -> bool {
-        self.0[y as usize][x as usize] != Cell::Empty
+        self.0[y as usize][x as usize] != None
     }
 
     fn check_collision(&self, blocks: &[Coords]) -> bool {
@@ -791,9 +789,9 @@ impl Pile {
         for y in 0..lines as usize {
             for x in 0..PILE_WIDTH {
                 if x != column as usize {
-                    self.0[y][x] = Cell::Garbage;
+                    self.0[y][x] = Some(Cell::Garbage);
                 } else {
-                    self.0[y][x] = Cell::Empty;
+                    self.0[y][x] = None;
                 }
             }
         }
