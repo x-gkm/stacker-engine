@@ -11,7 +11,7 @@ pub const PILE_WIDTH: usize = 10;
 pub const GRID_HEIGHT: i32 = 20;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct GameConfig {
+pub struct Config {
     pub das: u32,
     pub arr: u32,
     pub are: u32,
@@ -234,7 +234,7 @@ pub struct Engine {
     hold: Option<HoldPiece>,
     next_queue: NextQueue,
     movement: MovementState,
-    config: GameConfig,
+    config: Config,
     spawn_timer: Timer,
     fall_timer: Timer,
     das_timer: Timer,
@@ -255,7 +255,7 @@ pub struct Engine {
 impl Engine {
     pub const FPS: i32 = 60;
 
-    pub fn new(seed: u64, config: GameConfig) -> Engine {
+    pub fn new(seed: u64, config: Config) -> Engine {
         let mut spawn_timer = Timer::new();
 
         spawn_timer.set(60);
