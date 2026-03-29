@@ -180,10 +180,9 @@ impl NextQueue {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HoldPiece {
-    Empty,
-    Locked(PieceKind),
-    Unlocked(PieceKind),
+pub struct HoldPiece {
+    pub kind: PieceKind,
+    pub is_locked: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -234,7 +233,7 @@ pub struct Engine {
     pile: Pile,
     active_piece: Option<Piece>,
     ghost_piece: Option<Piece>,
-    hold: HoldPiece,
+    hold: Option<HoldPiece>,
     next_queue: NextQueue,
     movement: MovementState,
     config: GameConfig,
@@ -275,7 +274,7 @@ impl Engine {
                 soft_dropping: false,
             },
             next_queue: NextQueue::new(seed),
-            hold: HoldPiece::Empty,
+            hold: None,
             config,
             spawn_timer,
             fall_timer: Timer::new(),
@@ -334,8 +333,8 @@ impl Engine {
         }
         let lines_to_clear = self.pile.lines_to_clear();
 
-        if let HoldPiece::Locked(piece) = self.hold {
-            self.hold = HoldPiece::Unlocked(piece);
+        if let Some(ref mut hold) = self.hold {
+            hold.is_locked = false;
         }
 
         self.frame_outcome.tspin = self.last_input_was_rotate
@@ -536,12 +535,17 @@ impl Engine {
         };
 
         let piece = match self.hold {
-            HoldPiece::Unlocked(piece) => piece,
-            HoldPiece::Empty => self.next_queue.pull(),
-            HoldPiece::Locked(..) => return,
+            Some(HoldPiece {
+                is_locked: false,
+                kind,
+            }) => kind,
+            None => self.next_queue.pull(),
+            Some(HoldPiece {
+                is_locked: true, ..
+            }) => return,
         };
 
-        self.hold = HoldPiece::Locked(active_piece.kind);
+        self.hold = Some(HoldPiece{kind: active_piece.kind, is_locked: true });
         self.fall_timer.stop();
         self.spawn(piece);
     }
@@ -669,7 +673,7 @@ impl Engine {
         &self.ghost_piece
     }
 
-    pub fn hold(&self) -> &HoldPiece {
+    pub fn hold(&self) -> &Option<HoldPiece> {
         &self.hold
     }
 
