@@ -6,6 +6,8 @@ use rand::{RngExt, SeedableRng, seq::SliceRandom};
 use rand_chacha::ChaChaRng;
 use serde::{Deserialize, Serialize};
 
+mod tables;
+
 pub const PILE_HEIGHT: usize = 40;
 pub const PILE_WIDTH: usize = 10;
 pub const GRID_HEIGHT: i32 = 20;
@@ -33,47 +35,6 @@ pub enum PieceKind {
 }
 
 pub type Coords = (i32, i32);
-
-impl PieceKind {
-    fn blocks(self, orientation: Orientation) -> [Coords; 4] {
-        match (self, orientation) {
-            (PieceKind::I, Orientation::N) => [(0, 0), (-1, 0), (1, 0), (2, 0)],
-            (PieceKind::I, Orientation::E) => [(0, 0), (0, -2), (0, -1), (0, 1)],
-            (PieceKind::I, Orientation::S) => [(0, 0), (-2, 0), (-1, 0), (1, 0)],
-            (PieceKind::I, Orientation::W) => [(0, 0), (0, -1), (0, 1), (0, 2)],
-
-            (PieceKind::J, Orientation::N) => [(0, 0), (-1, 0), (-1, 1), (1, 0)],
-            (PieceKind::J, Orientation::E) => [(0, 0), (0, 1), (1, 1), (0, -1)],
-            (PieceKind::J, Orientation::S) => [(0, 0), (-1, 0), (1, -1), (1, 0)],
-            (PieceKind::J, Orientation::W) => [(0, 0), (0, 1), (-1, -1), (0, -1)],
-
-            (PieceKind::L, Orientation::N) => [(0, 0), (-1, 0), (1, 1), (1, 0)],
-            (PieceKind::L, Orientation::E) => [(0, 0), (0, 1), (1, -1), (0, -1)],
-            (PieceKind::L, Orientation::S) => [(0, 0), (-1, 0), (-1, -1), (1, 0)],
-            (PieceKind::L, Orientation::W) => [(0, 0), (0, 1), (-1, 1), (0, -1)],
-
-            (PieceKind::O, Orientation::N) => [(0, 0), (0, 1), (1, 1), (1, 0)],
-            (PieceKind::O, Orientation::E) => [(0, 0), (0, -1), (1, -1), (1, 0)],
-            (PieceKind::O, Orientation::S) => [(0, 0), (0, -1), (-1, -1), (-1, 0)],
-            (PieceKind::O, Orientation::W) => [(0, 0), (0, 1), (-1, 1), (-1, 0)],
-
-            (PieceKind::S, Orientation::N) => [(0, 0), (1, 1), (0, 1), (-1, 0)],
-            (PieceKind::S, Orientation::E) => [(0, 0), (1, -1), (1, 0), (0, 1)],
-            (PieceKind::S, Orientation::S) => [(0, 0), (1, 0), (0, -1), (-1, -1)],
-            (PieceKind::S, Orientation::W) => [(0, 0), (0, -1), (-1, 0), (-1, 1)],
-
-            (PieceKind::T, Orientation::N) => [(0, 0), (-1, 0), (0, 1), (1, 0)],
-            (PieceKind::T, Orientation::E) => [(0, 0), (0, 1), (1, 0), (0, -1)],
-            (PieceKind::T, Orientation::S) => [(0, 0), (-1, 0), (0, -1), (1, 0)],
-            (PieceKind::T, Orientation::W) => [(0, 0), (0, 1), (-1, 0), (0, -1)],
-
-            (PieceKind::Z, Orientation::N) => [(0, 0), (-1, 1), (0, 1), (1, 0)],
-            (PieceKind::Z, Orientation::E) => [(0, 0), (1, 1), (1, 0), (0, -1)],
-            (PieceKind::Z, Orientation::S) => [(0, 0), (-1, 0), (0, -1), (1, -1)],
-            (PieceKind::Z, Orientation::W) => [(0, 0), (0, 1), (-1, 0), (-1, -1)],
-        }
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Cell {
@@ -282,7 +243,10 @@ impl Engine {
             game_over: false,
             combo: None,
             back_to_back: None,
-            frame_outcome: FrameOutcome { tspin: false, lines_cleared: 0 },
+            frame_outcome: FrameOutcome {
+                tspin: false,
+                lines_cleared: 0,
+            },
             last_input_was_rotate: false,
             buffered_inputs: Default::default(),
             garbage_rng: ChaChaRng::seed_from_u64(seed),
@@ -309,7 +273,7 @@ impl Engine {
         let new_orientation = active_piece.orientation.rotate_cw(count);
 
         for n in 0..5 {
-            let (kick_x, kick_y) = kick_offset(
+            let (kick_x, kick_y) = tables::kick_offset(
                 active_piece.kind,
                 active_piece.orientation,
                 new_orientation,
@@ -551,7 +515,10 @@ impl Engine {
             }) => return,
         };
 
-        self.hold = Some(HoldPiece{kind: active_piece.kind, is_locked: true });
+        self.hold = Some(HoldPiece {
+            kind: active_piece.kind,
+            is_locked: true,
+        });
         self.fall_timer.stop();
         self.spawn(piece);
     }
@@ -835,9 +802,7 @@ impl Piece {
     }
 
     fn update_blocks(&mut self) {
-        self.blocks = self
-            .kind
-            .blocks(self.orientation)
+        self.blocks = tables::piece_blocks(self.kind, self.orientation)
             .map(|(bx, by)| (self.x + bx, self.y + by));
     }
 
@@ -856,35 +821,4 @@ impl Piece {
     fn lowest_y(&self) -> i32 {
         self.blocks.map(|(_, y)| y).iter().copied().min().unwrap()
     }
-}
-
-fn kick_offset(piece: PieceKind, from: Orientation, to: Orientation, n: i32) -> Coords {
-    let (x1, y1) = kick_offset_part(piece, from, n);
-    let (x2, y2) = kick_offset_part(piece, to, n);
-
-    (x1 - x2, y1 - y2)
-}
-
-fn kick_offset_part(piece: PieceKind, orientation: Orientation, n: i32) -> Coords {
-    if piece == PieceKind::O {
-        return match orientation {
-            Orientation::N => (0, 0),
-            Orientation::E => (0, -1),
-            Orientation::S => (-1, -1),
-            Orientation::W => (-1, 0),
-        };
-    }
-
-    let offsets = match (piece, orientation) {
-        (PieceKind::I, Orientation::N) => [(0, 0), (-1, 0), (2, 0), (-1, 0), (2, 0)],
-        (PieceKind::I, Orientation::E) => [(-1, 0), (0, 0), (0, 0), (0, 1), (0, -2)],
-        (PieceKind::I, Orientation::S) => [(-1, 1), (1, 1), (-2, 1), (1, 0), (-2, 0)],
-        (PieceKind::I, Orientation::W) => [(0, 1), (0, 1), (0, 1), (0, -1), (0, 2)],
-        (_, Orientation::N) => [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0)],
-        (_, Orientation::E) => [(0, 0), (1, 0), (1, -1), (0, 2), (1, 2)],
-        (_, Orientation::S) => [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0)],
-        (_, Orientation::W) => [(0, 0), (-1, 0), (-1, -1), (0, 2), (-1, 2)],
-    };
-
-    offsets[n as usize]
 }
