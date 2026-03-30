@@ -12,6 +12,7 @@ pub const GRID_HEIGHT: i32 = 20;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Config {
+    pub spawn: u32,
     pub das: u32,
     pub arr: u32,
     pub are: u32,
@@ -256,11 +257,7 @@ impl Engine {
     pub const FPS: i32 = 60;
 
     pub fn new(seed: u64, config: Config) -> Engine {
-        let mut spawn_timer = Timer::new();
-
-        spawn_timer.set(60);
-
-        Engine {
+        let mut result = Engine {
             frame: 0,
             pile: Pile::new(),
             active_piece: None,
@@ -274,7 +271,7 @@ impl Engine {
             next_queue: NextQueue::new(seed),
             hold: None,
             config,
-            spawn_timer,
+            spawn_timer: Timer::new(),
             fall_timer: Timer::new(),
             das_timer: Timer::new(),
             line_clear_timer: Timer::new(),
@@ -289,7 +286,15 @@ impl Engine {
             buffered_inputs: Default::default(),
             garbage_rng: ChaChaRng::seed_from_u64(seed),
             garbage_queue: Deque::new(),
+        };
+
+        if result.config.spawn > 0 {
+            result.spawn_timer.set(result.config.spawn);
+        } else {
+            result.spawn_next();
         }
+
+        result
     }
 
     fn rotate(&mut self, count: i32) {
