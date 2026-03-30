@@ -18,7 +18,7 @@ pub struct Config {
     pub are: u32,
     pub gravity: u32,
     pub softdrop: u32,
-    pub clear_delay: u32,
+    pub line_clear: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -348,14 +348,14 @@ impl Engine {
         self.set_active(None);
         let spawn_delay;
         if lines_to_clear > 0 {
-            spawn_delay = if self.config.clear_delay > self.config.are {
-                self.config.clear_delay
+            spawn_delay = if self.config.line_clear > self.config.are {
+                self.config.line_clear
             } else {
                 self.config.are
             };
 
-            if self.config.clear_delay > 0 {
-                self.line_clear_timer.set(self.config.clear_delay);
+            if self.config.line_clear > 0 {
+                self.line_clear_timer.set(self.config.line_clear);
             } else {
                 self.pile.line_clear();
             }
