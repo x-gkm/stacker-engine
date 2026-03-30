@@ -39,9 +39,9 @@ pub fn piece_blocks(kind: PieceKind, orientation: Orientation) -> [Coords; 4] {
     }
 }
 
-pub fn kick_offset(piece: PieceKind, from: Orientation, to: Orientation, n: i32) -> Coords {
-    let (x1, y1) = kick_offset_part(piece, from, n);
-    let (x2, y2) = kick_offset_part(piece, to, n);
+pub fn kick_offset(piece: PieceKind, orientation: Orientation, rotate_cw: i32, n: i32) -> Coords {
+    let (x1, y1) = kick_offset_part(piece, orientation, n);
+    let (x2, y2) = kick_offset_part(piece, orientation.rotate_cw(rotate_cw), n);
 
     (x1 - x2, y1 - y2)
 }

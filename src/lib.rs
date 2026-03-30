@@ -270,13 +270,11 @@ impl Engine {
 
         self.last_input_was_rotate = true;
 
-        let new_orientation = active_piece.orientation.rotate_cw(count);
-
         for n in 0..5 {
             let (kick_x, kick_y) = tables::kick_offset(
                 active_piece.kind,
                 active_piece.orientation,
-                new_orientation,
+                count,
                 n,
             );
             if let Some(piece) = self.can_move(kick_x, kick_y, count) {
