@@ -218,6 +218,7 @@ impl Timer {
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct FrameOutcome {
     pub tspin: bool,
+    pub lines_cleared: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -281,7 +282,7 @@ impl Engine {
             game_over: false,
             combo: None,
             back_to_back: None,
-            frame_outcome: FrameOutcome { tspin: false },
+            frame_outcome: FrameOutcome { tspin: false, lines_cleared: 0 },
             last_input_was_rotate: false,
             buffered_inputs: Default::default(),
             garbage_rng: ChaChaRng::seed_from_u64(seed),
@@ -339,6 +340,8 @@ impl Engine {
         if let Some(ref mut hold) = self.hold {
             hold.is_locked = false;
         }
+
+        self.frame_outcome.lines_cleared = lines_to_clear;
 
         self.frame_outcome.tspin = self.last_input_was_rotate
             && ghost_piece.kind == PieceKind::T
