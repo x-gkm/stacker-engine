@@ -146,7 +146,7 @@ struct MovementState {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct NextQueue {
-    pieces: Deque<PieceKind, 13>,
+    pieces: Deque<PieceKind, 11>,
     rng: ChaChaRng,
 }
 
