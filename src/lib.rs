@@ -1,11 +1,11 @@
 #![no_std]
 
 use heapless::Deque;
-
-use rand::{RngExt, SeedableRng, seq::SliceRandom};
-use rand_chacha::ChaChaRng;
 use serde::{Deserialize, Serialize};
 
+use crate::random::PRNG;
+
+mod random;
 mod tables;
 
 pub const PILE_HEIGHT: usize = 40;
@@ -108,14 +108,14 @@ struct MovementState {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct NextQueue {
     pieces: Deque<PieceKind, 11>,
-    rng: ChaChaRng,
+    rng: PRNG,
 }
 
 impl NextQueue {
     fn new(seed: u64) -> NextQueue {
         let mut result = NextQueue {
             pieces: Deque::new(),
-            rng: ChaChaRng::seed_from_u64(seed),
+            rng: PRNG::new(seed),
         };
 
         result.add_bag();
@@ -134,7 +134,7 @@ impl NextQueue {
     fn add_bag(&mut self) {
         use PieceKind::*;
         let mut bag = [I, J, L, O, S, T, Z];
-        bag.shuffle(&mut self.rng);
+        self.rng.shuffle(&mut bag);
         self.pieces.extend(bag);
     }
 }
@@ -219,7 +219,7 @@ pub struct Engine {
 
     buffered_inputs: BufferedInputs,
 
-    garbage_rng: ChaChaRng,
+    garbage_rng: PRNG,
     garbage_queue: Deque<i32, 40>,
 }
 
@@ -265,7 +265,7 @@ impl Engine {
 
             buffered_inputs: Default::default(),
 
-            garbage_rng: ChaChaRng::seed_from_u64(seed),
+            garbage_rng: PRNG::new(seed),
             garbage_queue: Deque::new(),
         };
 
@@ -359,7 +359,7 @@ impl Engine {
 
         if !self.garbage_queue.is_empty() {
             for &lines in &self.garbage_queue {
-                let column = self.garbage_rng.random_range(0..10);
+                let column = self.garbage_rng.random_range(0, 10);
                 self.pile.push_garbage(lines, column);
             }
 
