@@ -23,6 +23,20 @@ pub struct Config {
     pub line_clear: u32,
 }
 
+impl Default for Config {
+    fn default() -> Config {
+        Config {
+            spawn: 60,
+            das: 6,
+            arr: 0,
+            are: 0,
+            gravity: 60,
+            softdrop: 0,
+            line_clear: 0,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PieceKind {
     I,
@@ -97,7 +111,7 @@ impl Direction {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 struct MovementState {
     das: Option<Direction>,
     move_left: bool,
@@ -114,7 +128,7 @@ struct NextQueue {
 impl NextQueue {
     fn new(seed: u64) -> NextQueue {
         let mut result = NextQueue {
-            pieces: Deque::new(),
+            pieces: Deque::default(),
             rng: PRNG::new(seed),
         };
 
@@ -145,14 +159,10 @@ pub struct HoldPiece {
     pub is_locked: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 struct Timer(u32);
 
 impl Timer {
-    fn new() -> Timer {
-        Timer(0)
-    }
-
     fn tick(&mut self) -> bool {
         if self.0 == 0 {
             return false;
@@ -230,23 +240,18 @@ impl Engine {
         let mut result = Engine {
             config,
             frame: 0,
-            pile: Pile::new(),
+            pile: Pile::default(),
             active_piece: None,
             ghost_piece: None,
             hold: None,
             next_queue: NextQueue::new(seed),
-            movement: MovementState {
-                das: None,
-                move_left: false,
-                move_right: false,
-                soft_dropping: false,
-            },
+            movement: MovementState::default(),
 
-            spawn_timer: Timer::new(),
-            fall_timer: Timer::new(),
-            das_timer: Timer::new(),
-            line_clear_timer: Timer::new(),
-            lock_timer: Timer::new(),
+            spawn_timer: Timer::default(),
+            fall_timer: Timer::default(),
+            das_timer: Timer::default(),
+            line_clear_timer: Timer::default(),
+            lock_timer: Timer::default(),
 
             lowest_y: 0,
             resets: 0,
@@ -256,17 +261,14 @@ impl Engine {
             combo: None,
             back_to_back: None,
 
-            frame_outcome: FrameOutcome {
-                tspin: false,
-                lines_cleared: 0,
-            },
+            frame_outcome: FrameOutcome::default(),
 
             last_input_was_rotate: false,
 
-            buffered_inputs: Default::default(),
+            buffered_inputs: BufferedInputs::default(),
 
             garbage_rng: PRNG::new(seed),
-            garbage_queue: Deque::new(),
+            garbage_queue: Deque::default(),
         };
 
         if result.config.spawn > 0 {
@@ -696,11 +698,13 @@ impl Engine {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct Pile(#[serde(with = "serde_big_array::BigArray")] [[Option<Cell>; PILE_WIDTH]; PILE_HEIGHT]);
 
-impl Pile {
-    fn new() -> Pile {
+impl Default for Pile {
+    fn default() -> Pile {
         Pile([[None; PILE_WIDTH]; PILE_HEIGHT])
     }
+}
 
+impl Pile {
     fn is_row_full(&self, row: usize) -> bool {
         self.0[row].iter().all(|&cell| cell != None)
     }
