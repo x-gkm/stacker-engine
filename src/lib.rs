@@ -190,6 +190,7 @@ struct BufferedInputs {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Engine {
+    config: Config,
     frame: i32,
     pile: Pile,
     active_piece: Option<Piece>,
@@ -197,20 +198,27 @@ pub struct Engine {
     hold: Option<HoldPiece>,
     next_queue: NextQueue,
     movement: MovementState,
-    config: Config,
+
     spawn_timer: Timer,
     fall_timer: Timer,
     das_timer: Timer,
     line_clear_timer: Timer,
+    lock_timer: Timer,
+
     lowest_y: i32,
     resets: i32,
-    lock_timer: Timer,
+
     game_over: bool,
+
     combo: Option<i32>,
     back_to_back: Option<i32>,
+
     frame_outcome: FrameOutcome,
+
     last_input_was_rotate: bool,
+
     buffered_inputs: BufferedInputs,
+
     garbage_rng: ChaChaRng,
     garbage_queue: Deque<i32, 40>,
 }
@@ -220,35 +228,43 @@ impl Engine {
 
     pub fn new(seed: u64, config: Config) -> Engine {
         let mut result = Engine {
+            config,
             frame: 0,
             pile: Pile::new(),
             active_piece: None,
             ghost_piece: None,
+            hold: None,
+            next_queue: NextQueue::new(seed),
             movement: MovementState {
                 das: None,
                 move_left: false,
                 move_right: false,
                 soft_dropping: false,
             },
-            next_queue: NextQueue::new(seed),
-            hold: None,
-            config,
+
             spawn_timer: Timer::new(),
             fall_timer: Timer::new(),
             das_timer: Timer::new(),
             line_clear_timer: Timer::new(),
+            lock_timer: Timer::new(),
+
             lowest_y: 0,
             resets: 0,
-            lock_timer: Timer::new(),
+
             game_over: false,
+
             combo: None,
             back_to_back: None,
+
             frame_outcome: FrameOutcome {
                 tspin: false,
                 lines_cleared: 0,
             },
+
             last_input_was_rotate: false,
+
             buffered_inputs: Default::default(),
+
             garbage_rng: ChaChaRng::seed_from_u64(seed),
             garbage_queue: Deque::new(),
         };
