@@ -542,7 +542,7 @@ impl Engine {
     }
 
     pub fn update(&mut self, frame_inputs: &[Input]) {
-        self.frame_outcome = Default::default();
+        self.frame_outcome = FrameOutcome::default();
 
         if self.game_over {
             return;
