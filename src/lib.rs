@@ -337,7 +337,7 @@ impl Engine {
             if self.config.line_clear > 0 {
                 self.line_clear_timer.set(self.config.line_clear);
             } else {
-                self.pile.line_clear();
+                self.pile.clear_lines();
             }
 
             if let Some(ref mut combo) = self.combo {
@@ -552,7 +552,7 @@ impl Engine {
 
         // line_clear should be called before spawn so that the ghost piece isn't floating.
         if self.line_clear_timer.tick() {
-            self.pile.line_clear();
+            self.pile.clear_lines();
         }
         if self.spawn_timer.tick() {
             self.spawn_next();
@@ -716,7 +716,7 @@ impl Pile {
             .count() as i32
     }
 
-    fn line_clear(&mut self) {
+    fn clear_lines(&mut self) {
         for row in (0..PILE_HEIGHT).rev() {
             if !self.is_row_full(row) {
                 continue;
