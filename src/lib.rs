@@ -798,16 +798,12 @@ pub struct Piece {
 
 impl Piece {
     pub fn spawn(kind: PieceKind) -> Piece {
-        let x = PILE_WIDTH as i32 / 2 - 1;
-        let y = GRID_HEIGHT + 2;
-        let orientation = Orientation::N;
-
         let mut result = Piece {
             kind,
-            orientation,
-            x,
-            y,
-            blocks: [(0, 0); 4],
+            orientation: Orientation::N,
+            x: PILE_WIDTH as i32 / 2 - 1,
+            y: GRID_HEIGHT + 2,
+            blocks: Default::default(),
         };
 
         result.update_blocks();
