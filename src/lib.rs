@@ -305,6 +305,7 @@ impl Engine {
 
         if ghost_piece.lowest_y() >= GRID_HEIGHT {
             self.game_over = true;
+            self.set_active(Some(ghost_piece.clone()));
             return;
         }
 
