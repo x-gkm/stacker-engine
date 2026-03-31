@@ -1,4 +1,4 @@
-# stacker
+# stacker-engine
 
 Things left to implement:
 - [x] Harddrop
@@ -21,8 +21,4 @@ Things left to implement:
 - [x] T-spins
 - [x] Input buffering
 - [x] Garbage
-- [x] Implement proper 180 kicks
-- [ ] Add support for drawing multiple boards
-- [ ] Multiplayer server
-- [ ] Implement rollback
-- [ ] Proper client (egui, wgpu etc.)
+- [x] Proper 180 kicks
