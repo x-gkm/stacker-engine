@@ -1,8 +1,8 @@
 use rand::{RngExt, SeedableRng, seq::SliceRandom};
 use rand_chacha::{ChaCha20Rng, ChaChaRng};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PRNG {
     inner: ChaChaRng,
 }

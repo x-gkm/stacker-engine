@@ -1,6 +1,7 @@
 #![no_std]
 
 use heapless::Deque;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::random::PRNG;
@@ -12,7 +13,8 @@ pub const PILE_HEIGHT: usize = 40;
 pub const PILE_WIDTH: usize = 10;
 pub const GRID_HEIGHT: i32 = 20;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Config {
     pub spawn: u32,
     pub das: u32,
@@ -37,7 +39,8 @@ impl Default for Config {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PieceKind {
     I,
     J,
@@ -50,13 +53,15 @@ pub enum PieceKind {
 
 pub type Coords = (i32, i32);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Cell {
     PieceKind(PieceKind),
     Garbage,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Orientation {
     N,
     E,
@@ -80,7 +85,8 @@ impl Orientation {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Action {
     Flip,
     Hold,
@@ -90,13 +96,15 @@ pub enum Action {
     Softdrop,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Input {
     Begin(Action),
     End(Action),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Direction {
     Left,
     Right,
@@ -111,7 +119,8 @@ impl Direction {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct MovementState {
     das: Option<Direction>,
     move_left: bool,
@@ -119,7 +128,8 @@ struct MovementState {
     soft_dropping: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct NextQueue {
     pieces: Deque<PieceKind, 11>,
     rng: PRNG,
@@ -153,13 +163,15 @@ impl NextQueue {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HoldPiece {
     pub kind: PieceKind,
     pub is_locked: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct Timer(u32);
 
 impl Timer {
@@ -186,19 +198,22 @@ impl Timer {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FrameOutcome {
     pub tspin: bool,
     pub lines_cleared: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct BufferedInputs {
     hold: bool,
     rotation: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Engine {
     config: Config,
     frame: i32,
@@ -696,8 +711,13 @@ impl Engine {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-struct Pile(#[serde(with = "serde_big_array::BigArray")] [[Option<Cell>; PILE_WIDTH]; PILE_HEIGHT]);
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+
+struct Pile(
+    #[cfg_attr(feature = "serde", serde(with = "serde_big_array::BigArray"))]
+    [[Option<Cell>; PILE_WIDTH]; PILE_HEIGHT],
+);
 
 impl Default for Pile {
     fn default() -> Pile {
@@ -788,7 +808,8 @@ impl Pile {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Piece {
     pub kind: PieceKind,
     pub orientation: Orientation,
