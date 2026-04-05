@@ -1,7 +1,13 @@
+#[cfg(feature = "std")]
+use std::vec::Vec;
+#[cfg(not(feature = "std"))]
 use heapless::Vec;
 
 use crate::{Coords, Orientation, PieceKind};
 
+#[cfg(feature = "std")]
+type Kicks = Vec<Coords>;
+#[cfg(not(feature = "std"))]
 type Kicks = Vec<Coords, 6>;
 
 pub fn piece_blocks(kind: PieceKind, orientation: Orientation) -> [Coords; 4] {

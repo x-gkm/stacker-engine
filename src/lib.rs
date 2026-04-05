@@ -1,6 +1,13 @@
 #![no_std]
 
+#[cfg(feature = "std")]
+extern crate std;
+
+#[cfg(feature = "std")]
+use std::collections::VecDeque;
+#[cfg(not(feature = "std"))]
 use heapless::Deque;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -131,6 +138,9 @@ struct MovementState {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct NextQueue {
+    #[cfg(feature = "std")]
+    pieces: VecDeque<PieceKind>,
+    #[cfg(not(feature = "std"))]
     pieces: Deque<PieceKind, 11>,
     rng: PRNG,
 }
@@ -138,7 +148,7 @@ struct NextQueue {
 impl NextQueue {
     fn new(seed: u64) -> NextQueue {
         let mut result = NextQueue {
-            pieces: Deque::default(),
+            pieces: Default::default(),
             rng: PRNG::new(seed),
         };
 
@@ -245,6 +255,9 @@ pub struct Engine {
     buffered_inputs: BufferedInputs,
 
     garbage_rng: PRNG,
+    #[cfg(feature = "std")]
+    garbage_queue: VecDeque<i32>,
+    #[cfg(not(feature = "std"))]
     garbage_queue: Deque<i32, 40>,
 }
 
@@ -283,7 +296,7 @@ impl Engine {
             buffered_inputs: BufferedInputs::default(),
 
             garbage_rng: PRNG::new(seed),
-            garbage_queue: Deque::default(),
+            garbage_queue: Default::default(),
         };
 
         if result.config.spawn > 0 {
@@ -552,7 +565,7 @@ impl Engine {
     }
 
     pub fn queue_garbage(&mut self, lines: i32) {
-        // If we can't queue more garbage they are dead already so don't bother.
+        // If we are #[no_std] and if we can't queue more garbage they are dead already so don't bother.
         let _ = self.garbage_queue.push_back(lines);
     }
 

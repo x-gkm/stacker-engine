@@ -19,5 +19,6 @@ serde = { version = "1.0.228", default-features = false, features = [
 
 
 [features]
-default = []
+default = ["std"]
 serde = ["dep:serde", "dep:serde-big-array", "rand/serde", "rand_chacha/serde", "heapless/serde"]
+std = []
